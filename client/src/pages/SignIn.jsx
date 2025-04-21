@@ -1,3 +1,4 @@
+//client/src/pages/SignUp.jsx
 import React from 'react'
 
 const SignIn = () => {

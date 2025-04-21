@@ -1,4 +1,6 @@
+//client/src/pages/SignUp.jsx
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 const SignUp = () => {
   return (
@@ -14,12 +16,21 @@ const SignUp = () => {
           <input type="password" placeholder='Enter your password' 
           className=' bg-stone-50 focus:outline-none  p-3 rounded-lg ' id= 'password'/>
 
-          <button className='bg-slate-600 text-white rounded-lg uppercase hover:opacity-90 disabled:opacity-75 p-3 '>Sign Up</button>
+          <button className='bg-slate-600 text-white rounded-lg uppercase hover:opacity-90 disabled:opacity-75 p-3 '>Sign-Up</button>
         </form>
-         
-         {/* alrdy have an account */}
-          <p className='text-center mt-4'>Already have an account? 
-            <a href="/signin" className='text-slate-600 hover:underline'>Sign In</a></p>
+
+         {/* Already have an account */}
+           <p className='text-center mt-4'>
+               Already have an account?{' '}
+              <Link to="/sign-in" className='text-slate-600 hover:underline'>
+                Sign-In
+              </Link>
+            </p>
+            <p className='text-center mt-4'>
+               <Link to="/" className='text-slate-600 hover:underline'>
+                 Back to Home
+               </Link>
+            </p>
 
        </div>
   )
