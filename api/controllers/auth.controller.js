@@ -64,3 +64,57 @@ export const signin = async (req, res, next) => {
     next(error);
   }
 };
+
+export const google = async (req, res, next) => {
+  try {
+    console.log("Incoming Google data:", req.body); // debug log
+
+    const { email, name, profilePic } = req.body;
+
+    // Säkerställ att e-post finns
+    if (!email) {
+      return next(errorHandler(400, "Email is required"));
+    }
+
+    // Kolla om användaren finns redan
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      const token = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET);
+      const { password: pass, ...rest } = existingUser._doc;
+      return res
+        .cookie("access_token", token, { httpOnly: true })
+        .status(200)
+        .json(rest);
+    }
+
+    // Fall-back för namn om det saknas
+    const usernameFromName = name
+      ? name.split(" ").join("").toLowerCase()
+      : "user" + Math.random().toString(36).slice(-4);
+
+    const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(generatedPassword, 8);
+
+    const newUser = new User({
+      username: usernameFromName + Math.random().toString(36).slice(-4),
+      email,
+      password: hashedPassword,
+      avatar: profilePic || "", // profilbild kan vara tom
+    });
+
+    await newUser.save();
+
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
+    const { password: pass, ...rest } = newUser._doc;
+
+    return res
+      .cookie("access_token", token, { httpOnly: true })
+      .status(200)
+      .json(rest);
+
+  } catch (error) {
+    console.error("Google auth error:", error); // <-- ny logg
+    next(errorHandler(500, error.message || "Unknown error in Google auth"));
+  }
+};
