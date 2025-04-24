@@ -28,6 +28,7 @@ export const signup = async (req, res, next) => {
       email,
       password: hashedPassword,
       username: username || "anonymous",
+      avatar: "https://www.gravatar.com/avatar/?d=mp&f=y"
     });
 
     await newUser.save();
@@ -69,7 +70,7 @@ export const google = async (req, res, next) => {
   try {
     console.log("Incoming Google data:", req.body); // debug log
 
-    const { email, name, profilePic } = req.body;
+    const { email, name, photoURL } = req.body;
 
     // Säkerställ att e-post finns
     if (!email) {
@@ -100,7 +101,8 @@ export const google = async (req, res, next) => {
       username: usernameFromName + Math.random().toString(36).slice(-4),
       email,
       password: hashedPassword,
-      avatar: profilePic || "", // profilbild kan vara tom
+      avatar: photoURL || "https://www.gravatar.com/avatar/?d=mp&f=y",
+
     });
 
     await newUser.save();

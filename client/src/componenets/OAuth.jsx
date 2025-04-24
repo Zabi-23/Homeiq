@@ -23,11 +23,12 @@ export const OAuth = () => {
                 body: JSON.stringify({
                     name: result.user.displayName,
                     email: result.user.email,
-                    profilePic: result.user.photoURL,
+                    photoURL: result.user.photoURL,
                 }),
             });
             const data = await res.json();
-            dispatchEvent(signInSuccess(data));
+            dispatchEvent(signInSuccess({ user: data, token: null }));
+
             navigate('/dashboard'); // Redirect to dashboard or any other page
 
 
