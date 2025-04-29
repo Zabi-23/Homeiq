@@ -29,7 +29,7 @@ export const Header = () => {
             </Link>
             <Link to='/profile'>
             {currentUser ? (
-                <img src={currentUser.avatar} alt="profile" className='w-8 h-8 rounded-full' />
+                <img src={currentUser.avatar} alt="profile" className='w-8 h-8 rounded-full object-cover' />
                ) : (
                    <li className=' text-slate-700 hover:underline'>Sign In</li> 
                )}
