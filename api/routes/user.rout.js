@@ -1,16 +1,11 @@
 //api/routes/user.rout.js
-import express  from 'express';
+import express from 'express';
+import { updateUser, test } from '../controllers/user.controller.js';
+import { verifyToken } from '../utils/verifyUser.js';
 
 const router = express.Router();
-import { test } from '../controllers/user.controller.js';
-
-// Define a test route for the user controller
 
 router.get('/test', test);
-
-router.get('/', (req, res) => {
-    res.send('User route is working!');
-}
-);
+router.put('/update/:id', verifyToken, updateUser);
 
 export default router;

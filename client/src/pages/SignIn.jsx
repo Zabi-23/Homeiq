@@ -40,7 +40,7 @@ const SignIn = () => {
         return;
       }
 
-      dispatch(signInSuccess(data));
+      dispatch(signInSuccess({user: data.user, token: data.token}));
       navigate('/dashboard'); // eller till någon annan sida
     } catch (err) {
       console.error(err);
