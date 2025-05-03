@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import userRoute from './routes/user.rout.js';
 import authRoute from './routes/auth.route.js';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 
 const app = express();
 dotenv.config();
@@ -15,6 +16,10 @@ mongoose.connect(process.env.Mongo)
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware
+app.use(cors({
+  origin: 'http://localhost:5173', // Ersätt med din frontend-URL
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser());
 
