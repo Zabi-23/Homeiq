@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
 import jwt from 'jsonwebtoken';
+import e from 'express';
 
 export const signup = async (req, res, next) => {
   try {
@@ -122,5 +123,15 @@ export const google = async (req, res, next) => {
   } catch (error) {
     console.error("Google auth error:", error); // <-- ny logg
     next(errorHandler(500, error.message || "Unknown error in Google auth"));
+  }
+};
+
+// Logout function
+export const signOut = async (req, res) => {
+  try {
+    res.clearCookie("access_token", { path: "/" });
+    return res.status(200).json({ message: "User logged out successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error logging out" });
   }
 };

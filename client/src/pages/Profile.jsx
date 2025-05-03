@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { app } from '../firebase';
-import { updateUserStart, updateUserFailure, updateUserSuccess, logout } from '../redux/user/userSlice';
+import { updateUserStart, updateUserFailure, updateUserSuccess, signOutUserFailure, signOutUserStart,signOutUserSuccess } from '../redux/user/userSlice';
 import {useNavigate} from 'react-router-dom';
 
 import { useDispatch } from 'react-redux';
@@ -92,20 +92,21 @@ const Profile = () => {
         });
         const data = await res.json();
         if (data.success === false) {
-          console.error('Failed to delete account:', data.message).clearCookies('access_token');
+          dispatch(signOutUserFailure(data.message));
+          console.error('Failed to delete account:', data.message);
           return;
         }
         console.log('Account deleted successfully');
         setDeleteSuccess(true);
-        dispatch(updateUserStart());
-        dispatch(logout());
-        navigate('/sign-in')
-        // Add any additional cleanup or redirection logic here
+        dispatch(signOutUserSuccess());  // ✔️ bättre här också
+        navigate('/sign-in');
       } catch (error) {
+        dispatch(signOutUserFailure(error.message));
         console.error('Error deleting account:', error.message);
       }
     }
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -136,6 +137,29 @@ const Profile = () => {
     }
     
   }
+
+  // 🟢 Sign out function
+  const handleSignOut = async () => {
+    try {
+      dispatch(signOutUserStart()); // 🟢 1. Starta logout loading
+      const res = await fetch('http://localhost:3000/api/auth/signout', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(signOutUserFailure(data.message)); // 🔴 3. Om fel: sätt error
+        console.error('Failed to sign out:', data.message);
+        return;
+      }
+      dispatch(signOutUserSuccess()); // 🟢 2. Om allt gick bra: clear user
+      navigate('/sign-in'); // ➡️ Redirect till sign-in
+    } catch (error) {
+      dispatch(signOutUserFailure(error.message)); // 🔴 3. Vid error: error
+      console.error('Error signing out:', error.message);
+    }
+  };
+  
   
 
   return (
@@ -180,7 +204,8 @@ const Profile = () => {
 
       <div className='flex justify-between gap-4 max-w-2xl mx-auto p-4'>
         <span onClick={handleDeleteUser} className='text-red-700 cursor-pointer'>Delete account</span>
-        <span className='text-red-700 cursor-pointer'>Sign out</span>
+
+        <span onClick={handleSignOut} className='text-red-700 cursor-pointer'>Sign out</span>
       </div>
       
       {updateSuccess && (
