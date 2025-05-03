@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { app } from '../firebase';
-import { updateUserStart, updateUserFailure, updateUserSuccess } from '../redux/user/userSlice';
+import { updateUserStart, updateUserFailure, updateUserSuccess, logout } from '../redux/user/userSlice';
+import {useNavigate} from 'react-router-dom';
+
 import { useDispatch } from 'react-redux';
 
 const Profile = () => {
@@ -14,7 +16,9 @@ const Profile = () => {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [formData, setFormData] = useState({});
   const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
  
 
   const handleFileUpload = useCallback((file) => {
@@ -76,6 +80,33 @@ const Profile = () => {
   const handleChange = (e) => {
     setFormData({...formData, [e.target.id]: e.target.value });
   }
+
+  const handleDeleteUser = async () => {
+    if (window.confirm('Are you sure you want to delete your account?')) {
+      try {
+        const res = await fetch(`http://localhost:3000/api/user/delete/${currentUser._id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        if (data.success === false) {
+          console.error('Failed to delete account:', data.message).clearCookies('access_token');
+          return;
+        }
+        console.log('Account deleted successfully');
+        setDeleteSuccess(true);
+        dispatch(updateUserStart());
+        dispatch(logout());
+        navigate('/sign-in')
+        // Add any additional cleanup or redirection logic here
+      } catch (error) {
+        console.error('Error deleting account:', error.message);
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try{
@@ -105,6 +136,7 @@ const Profile = () => {
     }
     
   }
+  
 
   return (
     <div>
@@ -147,18 +179,23 @@ const Profile = () => {
       </form>
 
       <div className='flex justify-between gap-4 max-w-2xl mx-auto p-4'>
-        <span className='text-red-700 cursor-pointer'>Delete account</span>
+        <span onClick={handleDeleteUser} className='text-red-700 cursor-pointer'>Delete account</span>
         <span className='text-red-700 cursor-pointer'>Sign out</span>
       </div>
       
       {updateSuccess && (
         <p className='text-center text-green-600'> User is updated successful!</p>
       )}
+
+      {deleteSuccess && (
+        <p className='text-center text-red-600'> User is deleted successful!</p>
+      )}
     </div>
   );
 };
 
-export default Profile;
+
+  export default Profile;
 
 
 

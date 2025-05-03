@@ -1,6 +1,7 @@
 //cilent/src/redux/user/userSlice.js
 import { createSlice } from '@reduxjs/toolkit'
 
+
 const initialState = {
   currentUser: null,
   isLoggedIn: false,
@@ -44,9 +45,25 @@ const userSlice = createSlice({
       state.loading = false
       state.error = action.payload
     },
+    deleteUserStart: (state) => {
+      state.loading = true
+      state.error = null
+    },
+    deleteUserSuccess: (state) => {
+      state.loading = false
+      state.currentUser = null
+      state.isLoggedIn = false
+      state.token = null
+    },
+    deleteUserFailure: (state, action) => {
+      state.loading = false
+      state.error = action.payload
+    },
 
   },
 })
 
-export const { signInStart, signInSuccess, signInFailure, logout, updateUserFailure, updateUserStart, updateUserSuccess  } = userSlice.actions;
+export const { signInStart, signInSuccess, signInFailure, logout, updateUserFailure, updateUserStart, updateUserSuccess, deleteUserFailure,
+  deleteUserStart, deleteUserSuccess  } = userSlice.actions
+ 
 export default userSlice.reducer
