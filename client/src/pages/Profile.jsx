@@ -3,7 +3,8 @@ import { useSelector } from 'react-redux';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { app } from '../firebase';
 import { updateUserStart, updateUserFailure, updateUserSuccess, signOutUserFailure, signOutUserStart,signOutUserSuccess } from '../redux/user/userSlice';
-import {useNavigate} from 'react-router-dom';
+import { Link,useNavigate} from 'react-router-dom';
+
 
 import { useDispatch } from 'react-redux';
 
@@ -200,6 +201,9 @@ const Profile = () => {
         <input type='email' placeholder='Email' id='email' defaultValue={currentUser.email} className='p-3 border border-slate-300 rounded-lg' onChange={handleChange} />
         <input type='password' placeholder='Password' id='password' className='p-3 border border-slate-300 rounded-lg' onChange={handleChange} />
         <button type='submit' className='bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-85'>Update</button>
+        <Link className='bg-green-700 text-slate-100 p-3 rounded-lg uppercase text-center hover:opacity-90 ' to={"/create-listing"} >
+        Create Listing
+        </Link>
       </form>
 
       <div className='flex justify-between gap-4 max-w-2xl mx-auto p-4'>

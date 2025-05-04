@@ -7,6 +7,7 @@ import About from './pages/About';
 import Profile from './pages/Profile';
 import { Header } from './componenets/Header';
 import PrivateRoute from './componenets/PrivateRoute';
+import CreateListing from './pages/CreateListing';
 
 
 
@@ -20,11 +21,10 @@ const App = () => {
         <Route path="/sign-up" element={<SignUp/>} />
         <Route path="/about" element={<About />} />
         <Route element ={<PrivateRoute/>} >
-        <Route path="/profile" element={<Profile/>} />
-        
+         <Route path="/profile" element={<Profile/>} />
+         <Route path="/create-listing" element=
+        {<CreateListing/>} />
         </Route>
-        
-
       </Routes>
     </BrowserRouter>
   )
