@@ -1,5 +1,5 @@
 //client/src/pages/CreateListing.jsx
-// client/src/pages/CreateListing.jsx
+
 
 import React, { useState } from 'react';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -8,10 +8,12 @@ import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import {useSelector} from 'react-redux';
 export default function CreateListing() {
+  const { currentUser } = useSelector((state) => state.user);
   const [files, setFiles] = useState([]);
   const [formData, setFormData] = useState({
-    ImageUrls: [],
+    imageUrls: [],
     name: '',
     description: '',
     address: '',
@@ -22,7 +24,7 @@ export default function CreateListing() {
     bedrooms: 1,
     bathrooms: 1,
     regularPrice: 0,
-    discountedPrice: 0,
+    discountPrice: 0,
   });
   const [imageUploadError, setImageUploadError] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -37,7 +39,7 @@ export default function CreateListing() {
   };
 
   const handleImageSubmit = () => {
-    if (files.length > 0 && files.length + formData.ImageUrls.length <= 6) {
+    if (files.length > 0 && files.length + formData.imageUrls.length <= 6) {
       const promises = [];
       setUploading(true);
       for (let i = 0; i < files.length; i++) {
@@ -45,7 +47,7 @@ export default function CreateListing() {
       }
       Promise.all(promises)
         .then((urls) => {
-          setFormData((prev) => ({ ...prev, ImageUrls: [...prev.ImageUrls, ...urls] }));
+          setFormData((prev) => ({ ...prev, imageUrls: [...prev.imageUrls, ...urls] }));
           setImageUploadError(false);
           toast.success('Images uploaded successfully!');
         })
@@ -96,15 +98,45 @@ export default function CreateListing() {
       navigate('/profile');
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Här kan du lägga till API-anrop om du vill skicka formData till servern
-    console.log('Listing created:', formData);
-    toast.success('Listing created successfully!');
-    navigate('/profile');
+  
+    // Kontrollera att discountPrice är lägre än regularPrice om offer är true
+    if (formData.offer && Number(formData.discountPrice) >= Number(formData.regularPrice)) {
+      setImageUploadError('Discount price must be lower than regular price.');
+      toast.error('Discount price must be lower than regular price.');
+      return;
+    }
+  
+    try {
+      setUploading(true);
+      setImageUploadError(false);
+      const res = await fetch('/api/listing/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          userRef: currentUser._id,
+        }),
+      });
+      const data = await res.json();
+      setUploading(false);
+      if (data.success === false) {
+        setImageUploadError(data.message);
+        toast.error(data.message);
+      } else {
+        toast.success('Listing created successfully!'); 
+        navigate(` /listing/${data._id}`); // Redirect to the listing page
+      }
+    } catch (error) {
+      setUploading(false);
+      setImageUploadError(error.message);
+      toast.error('Something went wrong. Try again.');
+    }
   };
-
+  
   return (
     <main className="p-3 max-w-4xl mx-auto">
       <ToastContainer />
@@ -118,7 +150,7 @@ export default function CreateListing() {
             id="name"
             placeholder="Name"
             maxLength="62"
-            minLength="8"
+            minLength="5"
             required
             value={formData.name}
             onChange={handleChange}
@@ -233,19 +265,23 @@ export default function CreateListing() {
                 onChange={handleChange}
                 className="p-3 border border-slate-300 rounded-lg"
               />
-              <span className="text-xs">(Regular price $/month)</span>
+              <span className="text-xs">
+                {formData.type === 'rent' ? '(Regular price $/month)' : '(Regular price $)'}</span>
             </div>
+            {formData.offer && (
+
             <div className="flex flex-col gap-1">
               <input
                 type="number"
-                id="discountedPrice"
+                id="discountPrice"
                 min="0"
                 value={formData.discountedPrice}
                 onChange={handleChange}
                 className="p-3 border border-slate-300 rounded-lg"
               />
-              <span className="text-xs">(Discounted price $/month)</span>
+              <span className="text-xs">{formData.type === 'rent' ? '(Discounted price $/month)' : '(Discounted price $)'}</span>
             </div>
+            )}
           </div>
         </div>
 
@@ -278,9 +314,9 @@ export default function CreateListing() {
           {imageUploadError && <p className="text-center text-red-600">{imageUploadError}</p>}
 
           {/* Uploaded images */}
-          {formData.ImageUrls.length > 0 && (
+          {formData.imageUrls.length > 0 && (
             <div className="flex flex-col gap-2">
-              {formData.ImageUrls.map((url, index) => (
+              {formData.imageUrls.map((url, index) => (
                 <div key={index} className="flex items-center justify-between border p-2 rounded-lg gap-4">
                   <div className="w-32 h-20">
                     <img src={url} alt="Uploaded" className="w-full h-full object-cover rounded-lg" />
@@ -291,7 +327,7 @@ export default function CreateListing() {
                       if (window.confirm('Delete this image?')) {
                         setFormData((prev) => ({
                           ...prev,
-                          ImageUrls: prev.ImageUrls.filter((_, i) => i !== index),
+                          ImageUrls: prev.imageUrls.filter((_, i) => i !== index),
                         }));
                         toast.info('Image deleted.');
                       }
