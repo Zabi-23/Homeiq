@@ -180,9 +180,29 @@ const Profile = () => {
       console.error('Error fetching listings:', error.message);
     }
   };
-  
+   // 🟢 Delete listing function
+  const handleListingDelete = async (listingId) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/listing/delete/${listingId}`, {
 
-  
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        console.log('Failed to delete listing:', data.message);
+        return;
+      }
+      setUserListing((prev) =>
+         prev.filter((listing) => listing._id !== listingId)); 
+      console.log('Listing deleted successfully:', data);
+
+    } catch (error) {
+      console.error('Error deleting listing:', error.message);
+    }
+   
+        
+  };
+
   return (
     <div>
       <h1 className='text-3xl font-semibold text-center my-7'>Profile</h1>
@@ -256,7 +276,7 @@ const Profile = () => {
              <p >{listing.name}</p>
            </Link>
            <div className='flex flex-col items-center'>
-             <button className='text-red-700 uppercase'>Delete</button>
+             <button onClick={()=>handleListingDelete(listing._id)} className='text-red-700 uppercase'>Delete</button>
              <button className='text-green-700 uppercase'>Edit</button>
  
            </div>
