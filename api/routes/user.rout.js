@@ -10,7 +10,8 @@ router.get('/test', test);
 router.put('/update/:id', verifyToken, updateUser);
 /* router.delete('/delete/:id', verifyToken, deleteUser); */
 
-router.get('/listing/:id', verifyToken, getUserListing); //get user listing by id)
+/* router.get('/listing/:id', verifyToken, getUserListing); */ //get user listing by id)
+router.get('/listing/:id', getUserListing);
 //delete user just by id without token activate token before production
 router.delete('/delete/:id', deleteUser);
 

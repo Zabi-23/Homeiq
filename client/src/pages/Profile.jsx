@@ -20,6 +20,7 @@ const Profile = () => {
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [showListingError, setShowListingError] = useState(false); 
  
 
   const handleFileUpload = useCallback((file) => {
@@ -160,9 +161,26 @@ const Profile = () => {
       console.error('Error signing out:', error.message);
     }
   };
-  
+   
+  // 🟢 Show listings function
+  const handleShowListings = async () => {
+    try {
+      setShowListingError(false);
+      const res = await fetch(`http://localhost:3000/api/user/listing/${currentUser._id}`);
+      const data = await res.json();
+      if (data.success === false) {
+        setShowListingError(true);
+        return;
+      }
+      console.log('User listings:', data);
+    } catch (error) {
+      setShowListingError(true);
+      console.error('Error fetching listings:', error.message);
+    }
+  };
   
 
+  
   return (
     <div>
       <h1 className='text-3xl font-semibold text-center my-7'>Profile</h1>
@@ -218,6 +236,10 @@ const Profile = () => {
 
       {deleteSuccess && (
         <p className='text-center text-red-600'> User is deleted successful!</p>
+      )}
+      <button onClick={handleShowListings} className='text-green-700 w-full' >Show Listings</button>
+      {showListingError && (
+        <p className='text-center text-red-600'> Failed to fetch listings!</p>
       )}
     </div>
   );
