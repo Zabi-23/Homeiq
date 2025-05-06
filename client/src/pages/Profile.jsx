@@ -21,6 +21,7 @@ const Profile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [showListingError, setShowListingError] = useState(false); 
+  const [userListing, setUserListing] = useState([]); // State to store user listings
  
 
   const handleFileUpload = useCallback((file) => {
@@ -172,6 +173,7 @@ const Profile = () => {
         setShowListingError(true);
         return;
       }
+      setUserListing(data); // Store the listings in state
       console.log('User listings:', data);
     } catch (error) {
       setShowListingError(true);
@@ -241,6 +243,29 @@ const Profile = () => {
       {showListingError && (
         <p className='text-center text-red-600'> Failed to fetch listings!</p>
       )}
+
+      {userListing && userListing.length > 0 && (
+      <div className='flex flex-col gap-4 max-w-2xl mx-auto p-4'>
+        <h2 className='text-2xl font-semibold text-center mt-7'>Your Listings</h2>
+        {userListing.map((listing) => (
+         <div key={listing._id} className='border border-slate-300 rounded-lg p-3  my-4 max-w-2xl mx-auto flex justify-between items-center gap-4'>
+           <Link to= {`/listing/${listing._id}`} className='text-blue-700 hover:underline'>
+             <img src={listing.imageUrls[0]} alt={listing.cover} className='h-16 w-16 object-contain rounded-lg' />
+           </Link>
+           <Link className='text-slate-700 font-semibold hover:underline truncate flex-1' to={`/listing/${listing._id}`}>
+             <p >{listing.name}</p>
+           </Link>
+           <div className='flex flex-col items-center'>
+             <button className='text-red-700 uppercase'>Delete</button>
+             <button className='text-green-700 uppercase'>Edit</button>
+ 
+           </div>
+ 
+         </div>
+        ))}
+      </div>
+      )}
+
     </div>
   );
 };
