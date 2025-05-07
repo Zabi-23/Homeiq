@@ -76,3 +76,50 @@ export const getListing = async (req, res, next) => {
         next(error);
     }
 }
+
+// Create getListings for searchBox 
+export const getListings = async (req, res, next) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10; // Default limit to 10 if not provided
+        const startIndex = parseInt(req.query.startIndex) || 0; // Default startIndex to 0 if not provided
+        let offer = req.query.offer;
+
+        if( offer === undefined || offer === "false" ) {
+            offer = {$in: [false, true]} // If offer is undefined or false, return all listings;
+        }
+
+        let furnished = req.query.furnished;
+        if( furnished === undefined || furnished === "false" ) {
+            furnished = {$in: [false, true]} // If furnished is undefined or false, return all listings;
+        }
+
+        let parking = req.query.parking;
+        if( parking === undefined || parking === "false" ) {
+            parking = {$in: [false, true]} // If parking is undefined or false, return all listings;
+        }
+
+        let type = req.query.type;
+        if( type === undefined || type === "all" ) {
+            type = {$in: ['sale', 'rent']} // If type is undefined or false, return all listings;
+        }
+
+        const searchTerm = req.query.searchTerm || ""; // Default searchTerm to empty string if not provided
+
+        const sort = req.query.sort || "createdAt"; // Default sort to createdAt if not provided
+        const order = req.query.order || "desc"; // Default sortOrder to desc if not provided
+
+        const listings = await Listing.find({
+            name: { $regex: searchTerm, $options: "i" },
+            offer,
+            furnished,
+            parking,
+            type,
+ 
+        }).sort({ [sort]: order })
+        .limit(limit).skip(startIndex);
+
+        return res.status(200).json(listings);
+    } catch (error) {
+        next(error);
+    }
+}
