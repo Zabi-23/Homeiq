@@ -196,6 +196,7 @@ export default function Search  ()  {
 
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import ListingItem from '../componenets/ListingItem';
 
 export default function Search() {
   const navigate = useNavigate();
@@ -365,6 +366,19 @@ export default function Search() {
 
       <div className='flex-1'>
         <h1 className='text-3xl font-semibold border-b p-3 text-slate-700 mt-5'>Listing result:</h1>
+        <div className=''>
+            {!loading && listings.length === 0 && (
+                <p className=' text-2xl font-semibold text-slate-700 p-2 ml-3'>No listings found</p>
+            )}
+            {loading && (
+                <p className='text-center text-2xl font-semibold text-slate-700'> Loading </p>
+            )}
+            {
+                !loading && listings && listings.map((listing) => (
+                    <ListingItem key={listing._id} listing={listing}/>
+                ))
+            }
+        </div>
       </div>
     </div>
   );
