@@ -8,5 +8,23 @@
   "homeTitle2": "perfect",
   "homeTitle3": "place with ease",
   "homeIntro": "HomeIQ is a real estate platform that connects buyers, sellers, and renters with properties that meet their needs. Our mission is to make the process of finding a home as easy and efficient as possible. We offer a wide range of properties, from apartments to single-family homes, and provide tools and resources to help you make informed decisions.",
-  "homeStart": "Let's get started"
+  "homeStart": "Let's get started",
+  "footer": {
+  "contact": "Contact",
+  "company": "HomeIQ AB",
+  "address": "Vasagatan 12, 111 20 Stockholm",
+  "email": "Email: support@homeiq.se",
+  "phone": "Phone: +46 8 123 456 78",
+  "service": "Customer Service",
+  "faq": "FAQ",
+  "how": "How it works",
+  "terms": "Terms & Privacy",
+  "follow": "Follow us",
+  "facebook": "Facebook",
+  "instagram": "Instagram",
+  "linkedin": "LinkedIn",
+  "copyright": "All rights reserved."
+}
+
+
 }

@@ -28,13 +28,15 @@ export const Header = () => {
 
   return (
     <header className='bg-slate-200 shadow-md'>
-        <div className='flex justify-between items-center max-w-6xl mx-auto p-3'>
-        <Link to='/'>
-        <h1 className='font-bold text-sm sm:text-xl flex flex-wrap'>
-           <span className='text-slate-500'>Home</span>  
-           <span className='text-slate-700'>Iq</span>
-        </h1>
-        </Link>
+          <div className='flex justify-between items-center max-w-6xl mx-auto p-3'>
+          <Link to="/" className="flex items-center">
+          <img
+           src="/logo.png"
+           alt="HomeIQ logo"
+           className="h-8 sm:h-10 w-auto object-contain"
+           />
+          </Link>
+
         <form onSubmit={handleSubmit} className='bg-slate-100 p-3 rounded-lg flex items-center'>
             <input type="text" placeholder='Search...'
              className='bg-transparent focus:outline-none w-24 sm:w-64'

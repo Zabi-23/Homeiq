@@ -9,7 +9,26 @@
   "homeTitle2": "perfekta",
   "homeTitle3": "boende enkelt",
   "homeIntro": "HomeIQ är en bostadsplattform som kopplar samman köpare, säljare och hyresgäster med bostäder som matchar deras behov. Vårt mål är att göra processen att hitta ett hem så enkel och effektiv som möjligt. Vi erbjuder ett brett utbud av bostäder – från lägenheter till villor – samt verktyg och resurser som hjälper dig fatta välgrundade beslut.",
-  "homeStart": "Kom igång"
+  "homeStart": "Kom igång",
+
+  "footer": {
+  "contact": "Kontakt",
+  "company": "HomeIQ AB",
+  "address": "Vasagatan 12, 111 20 Stockholm",
+  "email": "Email: support@homeiq.se",
+  "phone": "Telefon: 08-123 456 78",
+  "service": "Kundtjänst",
+  "faq": "Vanliga frågor",
+  "how": "Hur det fungerar",
+  "terms": "Villkor & Sekretess",
+  "follow": "Följ oss",
+  "facebook": "Facebook",
+  "instagram": "Instagram",
+  "linkedin": "LinkedIn",
+  "copyright": "Alla rättigheter förbehållna."
+  }
+
+
 }
 
 
