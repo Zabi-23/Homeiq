@@ -1,9 +1,11 @@
+//client /src/pages/Profile.jsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { app } from '../firebase';
 import { updateUserStart, updateUserFailure, updateUserSuccess, signOutUserFailure, signOutUserStart,signOutUserSuccess } from '../redux/user/userSlice';
 import { Link,useNavigate} from 'react-router-dom';
+
 
 
 import { useDispatch } from 'react-redux';
@@ -181,27 +183,56 @@ const Profile = () => {
     }
   };
    // 🟢 Delete listing function
-  const handleListingDelete = async (listingId) => {
+ 
+
+  // Delete images from listing
+
+
+const handleListingDelete = async (listingId) => {
+  const listingToDelete = userListing.find((listing) => listing._id === listingId);
+  const imageUrlsToDelete = listingToDelete?.imageUrls || [];
+
+  // 🟢 Ta bort bilder från Firebase Storage
+  const storage = getStorage();
+  for (const url of imageUrlsToDelete) {
+    const path = decodeURIComponent(url.split('/o/')[1].split('?')[0]);
+    const imageRef = ref(storage, path);
     try {
-      const res = await fetch(`http://localhost:3000/api/listing/delete/${listingId}`, {
-
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (data.success === false) {
-        console.log('Failed to delete listing:', data.message);
-        return;
-      }
-      setUserListing((prev) =>
-         prev.filter((listing) => listing._id !== listingId)); 
-      console.log('Listing deleted successfully:', data);
-
-    } catch (error) {
-      console.error('Error deleting listing:', error.message);
+      await deleteObject(imageRef);
+      console.log('Deleted from Firebase:', path);
+    } catch (err) {
+      console.warn('Could not delete from Firebase:', err.message);
     }
-   
-        
-  };
+  }
+
+  // 🟢 Radera bild-URL:er från MongoDB
+  try {
+    await fetch(`http://localhost:3000/api/listing/delete-images/${listingId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrls: imageUrlsToDelete }),
+    });
+
+    // 🟢 Radera hela listingen
+    const res = await fetch(`http://localhost:3000/api/listing/delete/${listingId}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (!data.success && typeof data === 'object') {
+      console.warn('Failed to delete listing:', data.message);
+      return;
+    }
+
+    setUserListing((prev) => prev.filter((l) => l._id !== listingId));
+    console.log('Listing and images deleted!');
+  } catch (error) {
+    console.error('Error deleting listing or images:', error.message);
+  }
+};
+
+
+
+
 
   return (
     <div>

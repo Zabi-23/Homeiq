@@ -1,16 +1,12 @@
-
-//cilent/src/pages/UpdateListing.jsx
-
-
 import React, { useEffect, useState } from 'react';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { app } from '../firebase';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useSelector } from 'react-redux';
 
-import {useSelector} from 'react-redux';
-export default function CreateListing() {
+export default function UpdateListing() {
   const { currentUser } = useSelector((state) => state.user);
   const [files, setFiles] = useState([]);
   const [formData, setFormData] = useState({
@@ -27,10 +23,24 @@ export default function CreateListing() {
     regularPrice: 0,
     discountPrice: 0,
   });
+  const [removedImages, setRemovedImages] = useState([]); // 🟢 Lagrar borttagna bilder
   const [imageUploadError, setImageUploadError] = useState(false);
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
-  const params = useParams(); // Get the listingId from the URL
+  const params = useParams();
+
+  useEffect(() => {
+    const fetchListing = async () => {
+      const res = await fetch(`/api/listing/get/${params.listingId}`);
+      const data = await res.json();
+      if (data.success === false) {
+        toast.error(data.message);
+        return;
+      }
+      setFormData(data);
+    };
+    fetchListing();
+  }, [params.listingId]);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -39,21 +49,6 @@ export default function CreateListing() {
       [id]: value,
     }));
   };
-
-  useEffect(() => {
-    const fetchListing = async () => {
-        const listingId = params.listingId;
-        const res = await fetch(`/api/listing/get/${listingId}`);
-        const data = await res.json();
-        if(data.success === false) {
-            console.log(data.message)
-            return;
-        }
-        setFormData(data)
-     
-    };
-    fetchListing();
-  }, [params.listingId]);
 
   const handleImageSubmit = () => {
     if (files.length > 0 && files.length + formData.imageUrls.length <= 6) {
@@ -69,23 +64,21 @@ export default function CreateListing() {
           toast.success('Images uploaded successfully!');
         })
         .catch((error) => {
-          console.error('Error uploading images:', error);
-          setImageUploadError('Error uploading images. Max 2MB per image.');
-          toast.error('Image upload failed!');
+          console.error('Upload error:', error);
+          setImageUploadError('Upload failed. Images must be under 2MB.');
+          toast.error('Image upload failed.');
         })
         .finally(() => {
           setUploading(false);
         });
     } else if (files.length === 0) {
-      setImageUploadError('Please select at least one image to upload.');
       toast.error('No images selected.');
     } else {
-      setImageUploadError('You can only upload a maximum of 6 images.');
-      toast.error('Too many images.');
+      toast.error('Maximum 6 images allowed.');
     }
   };
 
-  const storeImage = async (file) => {
+  const storeImage = (file) => {
     return new Promise((resolve, reject) => {
       const storage = getStorage(app);
       const fileName = new Date().getTime() + file.name;
@@ -94,262 +87,144 @@ export default function CreateListing() {
 
       uploadTask.on(
         'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
-        },
-        (error) => {
-          reject(error);
-        },
+        null,
+        reject,
         () => {
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            resolve(downloadURL);
-          });
+          getDownloadURL(uploadTask.snapshot.ref).then(resolve);
         }
       );
     });
   };
 
-  const handleCancel = () => {
-    if (window.confirm('Are you sure you want to cancel?')) {
-      navigate('/profile');
-    }
-  };
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    // Kontrollera att discountPrice är lägre än regularPrice om offer är true
+
     if (formData.offer && Number(formData.discountPrice) >= Number(formData.regularPrice)) {
-      setImageUploadError('Discount price must be lower than regular price.');
       toast.error('Discount price must be lower than regular price.');
       return;
     }
-  
+
     try {
       setUploading(true);
-      setImageUploadError(false);
+
+      // 🟢 Uppdatera listing med nya data
       const res = await fetch(`/api/listing/update/${params.listingId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          userRef: currentUser._id,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, userRef: currentUser._id }),
       });
       const data = await res.json();
-      setUploading(false);
       if (data.success === false) {
-        setImageUploadError(data.message);
         toast.error(data.message);
-      } else {
-        toast.success('Listing created successfully!'); 
-        navigate(` /listing/${data._id}`); // Redirect to the listing page
+        return;
       }
-    } catch (error) {
+
+      // 🟢 Skicka borttagna bilder till backend + radera från Firebase
+      if (removedImages.length > 0) {
+        await fetch(`/api/listing/delete-images/${params.listingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrls: removedImages }),
+        });
+
+        const storage = getStorage(app);
+        for (const url of removedImages) {
+          const path = decodeURIComponent(url.split('/o/')[1].split('?')[0]);
+          const imageRef = ref(storage, path);
+          try {
+            await deleteObject(imageRef);
+            console.log('Deleted image from Firebase:', path);
+          } catch (err) {
+            console.warn('Could not delete from Firebase:', err.message);
+          }
+        }
+      }
+
+      toast.success('Listing updated successfully!');
+      navigate(`/listing/${params.listingId}`);
+    } catch (err) {
+      console.error(err.message);
+      toast.error('Update failed.');
+    } finally {
       setUploading(false);
-      setImageUploadError(error.message);
-      toast.error('Something went wrong. Try again.');
     }
   };
-  
+
+  const handleCancel = () => {
+    if (window.confirm('Cancel changes?')) {
+      navigate('/profile');
+    }
+  };
+
   return (
     <main className="p-3 max-w-4xl mx-auto">
       <ToastContainer />
-      <h1 className="text-3xl text-center font-semibold mt-4 my-7">Update Listing</h1>
-
+      <h1 className="text-3xl text-center font-semibold my-7">Update Listing</h1>
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-6">
-        {/* Left Side */}
+        {/* Left */}
         <div className="flex flex-col flex-1 gap-4">
-          <input
-            type="text"
-            id="name"
-            placeholder="Name"
-            maxLength="62"
-            minLength="5"
-            required
-            value={formData.name}
-            onChange={handleChange}
-            className="p-3 border border-slate-300 rounded-lg"
-          />
+          <input type="text" id="name" placeholder="Name" value={formData.name} onChange={handleChange} required className="p-3 border rounded" />
+          <textarea id="description" placeholder="Description" value={formData.description} onChange={handleChange} required className="p-3 border rounded" />
+          <input type="text" id="address" placeholder="Address" value={formData.address} onChange={handleChange} required className="p-3 border rounded" />
 
-          <textarea
-            id="description"
-            placeholder="Description"
-            minLength="20"
-            maxLength="800"
-            required
-            value={formData.description}
-            onChange={handleChange}
-            className="p-3 border border-slate-300 rounded-lg"
-          />
-
-          <input
-            type="text"
-            id="address"
-            placeholder="Address"
-            required
-            value={formData.address}
-            onChange={handleChange}
-            className="p-3 border border-slate-300 rounded-lg"
-          />
-
-          {/* Radios for Rent/Sale */}
           <div className="flex gap-6">
-            <div className="flex gap-2 items-center">
-              <input
-                type="radio"
-                id="sale"
-                name="type"
-                value="sale"
-                onChange={() => setFormData((prev) => ({ ...prev, type: 'sale' }))}
-                checked={formData.type === 'sale'}
-                className="w-5"
-              />
-              <span>Sell</span>
-            </div>
-            <div className="flex gap-2 items-center">
-              <input
-                type="radio"
-                id="rent"
-                name="type"
-                value="rent"
-                onChange={() => setFormData((prev) => ({ ...prev, type: 'rent' }))}
-                checked={formData.type === 'rent'}
-                className="w-5"
-              />
-              <span>Rent</span>
-            </div>
+            <label><input type="radio" value="sale" checked={formData.type === 'sale'} onChange={() => setFormData((prev) => ({ ...prev, type: 'sale' }))} /> Sell</label>
+            <label><input type="radio" value="rent" checked={formData.type === 'rent'} onChange={() => setFormData((prev) => ({ ...prev, type: 'rent' }))} /> Rent</label>
           </div>
 
-          {/* Checkboxes */}
           <div className="flex gap-6 flex-wrap">
             {['parking', 'furnished', 'offer'].map((item) => (
-              <div key={item} className="flex gap-2 items-center">
-                <input
-                  type="checkbox"
-                  id={item}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, [item]: e.target.checked }))
-                  }
-                  checked={formData[item]}
-                  className="w-5"
-                />
-                <span>{item.charAt(0).toUpperCase() + item.slice(1)}</span>
-              </div>
+              <label key={item}>
+                <input type="checkbox" checked={formData[item]} onChange={(e) => setFormData((prev) => ({ ...prev, [item]: e.target.checked }))} />
+                {item.charAt(0).toUpperCase() + item.slice(1)}
+              </label>
             ))}
           </div>
 
-          {/* Numeric inputs */}
-          <div className="flex flex-wrap gap-6">
-            <div className="flex items-center gap-3">
-              <input
-                type="number"
-                id="bedrooms"
-                min="1"
-                max="10"
-                required
-                value={formData.bedrooms}
-                onChange={handleChange}
-                className="p-3 border border-slate-300 rounded-lg"
-              />
-              <p>Beds</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <input
-                type="number"
-                id="bathrooms"
-                min="1"
-                max="10"
-                required
-                value={formData.bathrooms}
-                onChange={handleChange}
-                className="p-3 border border-slate-300 rounded-lg"
-              />
-              <p>Baths</p>
-            </div>
+          <div className="flex gap-6">
+            <input type="number" id="bedrooms" min="1" value={formData.bedrooms} onChange={handleChange} className="p-3 border rounded" />
+            <input type="number" id="bathrooms" min="1" value={formData.bathrooms} onChange={handleChange} className="p-3 border rounded" />
           </div>
 
-          <div className="flex flex-wrap gap-6">
-            <div className="flex flex-col gap-1">
-              <input
-                type="number"
-                id="regularPrice"
-                min="1"
-                required
-                value={formData.regularPrice}
-                onChange={handleChange}
-                className="p-3 border border-slate-300 rounded-lg"
-              />
-              <span className="text-xs">
-                {formData.type === 'rent' ? '(Regular price $/month)' : '(Regular price $)'}</span>
-            </div>
+          <div className="flex gap-6">
+            <input type="number" id="regularPrice" min="1" value={formData.regularPrice} onChange={handleChange} className="p-3 border rounded" />
             {formData.offer && (
-
-            <div className="flex flex-col gap-1">
-              <input
-                type="number"
-                id="discountPrice"
-                min="0"
-                value={formData.discountedPrice}
-                onChange={handleChange}
-                className="p-3 border border-slate-300 rounded-lg"
-              />
-              <span className="text-xs">{formData.type === 'rent' ? '(Discounted price $/month)' : '(Discounted price $)'}</span>
-            </div>
+              <input type="number" id="discountPrice" min="0" value={formData.discountPrice} onChange={handleChange} className="p-3 border rounded" />
             )}
           </div>
         </div>
 
-        {/* Right Side */}
+        {/* Right */}
         <div className="flex flex-col flex-1 gap-4">
-          <p className="text-center font-semibold">
-            Images:
-            <span className="font-normal text-gray-500 ml-2">(Max 6 images)</span>
-          </p>
+          <p className="font-semibold">Images: <span className="text-gray-500">(Max 6)</span></p>
 
           <div className="flex gap-4">
-            <input
-              onChange={(e) => setFiles(e.target.files)}
-              type="file"
-              id="images"
-              accept="image/*"
-              multiple
-              className="border border-slate-300 rounded-lg p-3"
-            />
-            <button
-              type="button"
-              onClick={handleImageSubmit}
-              className="p-3 text-green-700 border border-green-700 rounded-lg uppercase hover:shadow-lg disabled:opacity-80"
-            >
-              Upload
-            </button>
+            <input type="file" multiple accept="image/*" onChange={(e) => setFiles(e.target.files)} className="border p-3 rounded" />
+            <button type="button" onClick={handleImageSubmit} className="border p-3 rounded text-green-700">Upload</button>
           </div>
 
-          {uploading && <p className="text-center text-blue-600">Uploading images...</p>}
-          {imageUploadError && <p className="text-center text-red-600">{imageUploadError}</p>}
+          {uploading && <p className="text-blue-600">Uploading...</p>}
+          {imageUploadError && <p className="text-red-600">{imageUploadError}</p>}
 
-          {/* Uploaded images */}
+          {/* 🟢 Visa befintliga bilder med delete-funktion */}
           {formData.imageUrls.length > 0 && (
             <div className="flex flex-col gap-2">
               {formData.imageUrls.map((url, index) => (
-                <div key={index} className="flex items-center justify-between border p-2 rounded-lg gap-4">
-                  <div className="w-32 h-20">
-                    <img src={url} alt="Uploaded" className="w-full h-full object-cover rounded-lg" />
-                  </div>
+                <div key={index} className="flex items-center gap-4 border p-2 rounded">
+                  <img src={url} alt="listing" className="w-32 h-20 object-cover rounded" />
                   <button
                     type="button"
                     onClick={() => {
                       if (window.confirm('Delete this image?')) {
                         setFormData((prev) => ({
                           ...prev,
-                          ImageUrls: prev.imageUrls.filter((_, i) => i !== index),
+                          imageUrls: prev.imageUrls.filter((_, i) => i !== index),
                         }));
-                        toast.info('Image deleted.');
+                        setRemovedImages((prev) => [...prev, url]); // 🟢 Spara URL för borttagning
+                        toast.info('Image marked for deletion.');
                       }
                     }}
-                    className="p-2 text-red-700 border border-red-700 rounded-lg uppercase hover:shadow-lg hover:opacity-85"
+                    className="text-red-700 border border-red-700 p-2 rounded"
                   >
                     Delete
                   </button>
@@ -358,16 +233,8 @@ export default function CreateListing() {
             </div>
           )}
 
-          <button type="submit" className="p-3 text-white bg-slate-700 rounded-lg uppercase hover:shadow-lg">
-            Update Listing
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="p-3 text-white bg-red-700 rounded-lg uppercase hover:shadow-lg"
-          >
-            Cancel
-          </button>
+          <button type="submit" className="p-3 bg-slate-700 text-white rounded hover:shadow uppercase">Update Listing</button>
+          <button type="button" onClick={handleCancel} className="p-3 bg-red-700 text-white rounded hover:shadow uppercase">Cancel</button>
         </div>
       </form>
     </main>

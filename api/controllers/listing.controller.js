@@ -44,6 +44,31 @@ export const deleteListing = async (req, res, next) => {
         
 }
 
+// Delete one or more images from a listing
+export const deleteListingImages = async (req, res, next) => {
+    const { id } = req.params;
+    const {imageUrls } = req.body;
+
+    try {
+        const listing = await Listing.findById(id);
+        if(!listing) {
+            return next(errorHandler(404, "Listing not found"));
+
+        }
+        listing.imageUrls = listing.imageUrls.filter(url => !imageUrls.includes(url));
+
+        await listing.save();
+        return res.status(200).json({
+            success: true,
+            message: "Images deleted successfully",
+            listing
+        });
+    } catch (error){
+        next(error);
+    }
+
+}
+
 // Update a listing
 
 export const updateListing = async (req, res, next) => {
