@@ -7,6 +7,7 @@ import authRoute from './routes/auth.route.js';
 import listingRoute from './routes/listing.route.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import path from 'path';
 
 const app = express();
 dotenv.config();
@@ -16,6 +17,7 @@ mongoose.connect(process.env.Mongo)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+  const __dirname = path.resolve();
 // Middleware
 app.use(cors({
   origin: 'http://localhost:5173', // Ersätt med din frontend-URL
@@ -28,6 +30,13 @@ app.use(cookieParser());
 app.use('/api/user', userRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/listing', listingRoute); 
+
+// Serve static files from the "uploads" directory
+app.use(express.static(path.join(__dirname, '/client/dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
+});
 
 // Global error handler (MÅSTE ligga efter routes)
 app.use((err, req, res, next) => {
