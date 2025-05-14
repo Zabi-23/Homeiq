@@ -1,3 +1,4 @@
+// client/src/pages/Home.jsx
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -12,14 +13,9 @@ export default function Home() {
   const [offerListings, setOfferListings] = useState([]);
   const [saleListings, setSaleListings] = useState([]);
   const [rentListings, setRentListings] = useState([]);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   SwiperCore.use([Navigation]);
-
-  const toggleLanguage = () => {
-    const nextLang = i18n.language === 'sv' ? 'en' : 'sv';
-    i18n.changeLanguage(nextLang);
-  };
 
   useEffect(() => {
     const fetchOfferListings = async () => {
@@ -59,14 +55,6 @@ export default function Home() {
 
   return (
     <div>
-      {/* Language Toggle */}
-      <button
-        onClick={toggleLanguage}
-        className="absolute top-4 right-4 text-xs px-2 py-1 bg-slate-100 border border-slate-300 rounded hover:bg-slate-200 transition z-50"
-      >
-        {i18n.language === 'sv' ? 'EN' : 'SV'}
-      </button>
-
       {/* Hero Section */}
       <div className="flex flex-col gap-6 p-28 px-3 max-w-6xl mx-auto">
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-slate-700 leading-tight">
@@ -85,7 +73,6 @@ export default function Home() {
           className="text-sm sm:text-base text-blue-800 font-bold hover:underline"
         >
           {t('homeStart')}
-
         </Link>
       </div>
 
@@ -108,7 +95,7 @@ export default function Home() {
 
       {/* Listings */}
       <div className="max-w-6xl mx-auto p-3 flex flex-col gap-8 my-10">
-        {offerListings && offerListings.length > 0 && (
+        {offerListings.length > 0 && (
           <div>
             <div className="my-4">
               <h2 className="text-2xl font-semibold text-slate-600">
@@ -129,7 +116,7 @@ export default function Home() {
           </div>
         )}
 
-        {rentListings && rentListings.length > 0 && (
+        {rentListings.length > 0 && (
           <div>
             <div className="my-4">
               <h2 className="text-2xl font-semibold text-slate-600">
@@ -150,7 +137,7 @@ export default function Home() {
           </div>
         )}
 
-        {saleListings && saleListings.length > 0 && (
+        {saleListings.length > 0 && (
           <div>
             <div className="my-4">
               <h2 className="text-2xl font-semibold text-slate-600">
