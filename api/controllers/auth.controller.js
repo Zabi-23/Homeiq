@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
 import jwt from 'jsonwebtoken';
-import e from 'express';
+
 
 export const signup = async (req, res, next) => {
   try {
