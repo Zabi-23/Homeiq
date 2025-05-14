@@ -1,5 +1,5 @@
 //api/routes/user.rout.js
-/* import express from 'express';
+ import express from 'express';
 import { updateUser, test, getUserListing, deleteUser, getUser } from '../controllers/user.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 
@@ -16,10 +16,10 @@ router.get('/listing/:id', getUserListing);
 router.delete('/delete/:id', deleteUser);
 router.get('/:id', verifyToken, getUser); //get user by id with token
 
-export default router; */
+export default router; 
 
 // api/routes/user.route.js
-import express from 'express';
+/* import express from 'express';
 import { updateUser, test, getUserListing, deleteUser, getUser } from '../controllers/user.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 
@@ -31,5 +31,5 @@ router.get('/listing/:id', getUserListing);
 router.delete('/delete/:id', deleteUser);
 router.get('/user/:id', verifyToken, getUser); // <-- fixad här
 
-export default router;
+export default router; */
 
