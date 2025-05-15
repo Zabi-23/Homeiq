@@ -9,27 +9,20 @@
       "src": "client/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist",
+        "distDir": "client/dist",
         "installCommand": "cd client && npm install",
-        "buildCommand": "cd client && npm run build"
+        "buildCommand": "cd client && echo 'Node version:' && node --version && echo 'Checking environment variables:' && printenv | grep VITE_ || echo 'No VITE_ variables found' && echo 'Starting vite build...' && vite build --logLevel verbose || echo 'Vite build failed with error' && echo 'Checking dist directory:' && ls -la dist || echo 'Dist not found after build'"
       }
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/client/dist/assets/$1",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
+      "dest": "api/index.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/client/dist/index.html",
+      "dest": "client/dist/$1",
       "headers": {
         "Cache-Control": "public, max-age=0, must-revalidate"
       }
