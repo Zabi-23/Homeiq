@@ -9,9 +9,9 @@
       "src": "client/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "client/dist",
+        "distDir": "dist",
         "installCommand": "cd client && npm install",
-        "buildCommand": "cd client && echo 'Node version:' && node --version && echo 'Checking environment variables:' && printenv | grep VITE_ || echo 'No VITE_ variables found' && echo 'Starting vite build...' && vite build --logLevel verbose || echo 'Vite build failed with error' && echo 'Checking dist directory:' && ls -la dist || echo 'Dist not found after build'"
+        "buildCommand": "cd client && npm run build"
       }
     }
   ],
