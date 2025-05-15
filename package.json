@@ -1,7 +1,6 @@
 {
   "name": "homeiq",
   "version": "1.0.0",
-  "description": "",
   "main": "api/index.js",
   "type": "module",
   "scripts": {
@@ -20,6 +19,6 @@
     "path-to-regexp": "^8.2.0"
   },
   "engines": {
-    "node": "18.x"
+    "node": "22.14.0x"
   }
 }
