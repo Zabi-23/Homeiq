@@ -34,7 +34,7 @@
 ### Backend
 
 ```bash
-git clone https://github.com/ditt-användarnamn/homeiq.git
+git clone https://github.com/zabi-23/homeiq.git
 cd homeiq
 npm install
 ```
