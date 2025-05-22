@@ -82,15 +82,16 @@ POST /api/listings/
 
 ## 📸 Exempelbilder
 
-> Du kan lägga till skärmdumpar här, till exempel:
-- Inloggningssida
-- Annonsformulär
-- Resultatsida
+### Inloggningssida
+![Login](./public/Inloggningssida.png)
 
-```md
-![Login](link-till-bild)
-![Listing](link-till-bild)
-```
+### Annonsformulär
+![Create Listing](./public/Annonsformulär.png)
+
+### Resultatsida
+![Results](./public/Resultatsida.png)
+
+
 
 ---
 
